@@ -33,14 +33,16 @@
   </style>
 </head>
 <body>
-  <header><h1>潮汕钓红点</h1><div class="sub">凑10钓牌 · 只算红牌分 · 单人对战AI · 修复版</div></header>
+  <header><h1>潮汕钓红点</h1><div class="sub">凑10钓牌 · 真人/AI自由组合 · 最多4人</div></header>
   <div class="wrap">
     <section id="setup" class="panel">
-      <div class="row between"><div><b>开始一局</b><div class="stat">选择AI数量后，自动按2/3/4人规则发牌</div></div><button class="ghost" id="ruleBtn">规则</button></div>
+      <div class="row between"><div><b>开始一局</b><div class="stat">自由选择真人和AI，总人数2~4人，系统自动按人数发牌</div></div><button class="ghost" id="ruleBtn">规则</button></div>
       <div class="row center" style="margin-top:12px">
-        <label>AI数量：<select id="aiCount"><option value="1">1个AI（2人局）</option><option value="2">2个AI（3人局）</option><option value="3">3个AI（4人局）</option></select></label>
-        <button class="primary" id="startBtn">开始人机局</button>
+        <label>真人人数：<select id="humanCount"><option value="1">1个真人</option><option value="2">2个真人</option><option value="3">3个真人</option><option value="4">4个真人</option></select></label>
+        <label>AI人数：<select id="aiCount"><option value="0">0个AI</option><option value="1" selected>1个AI</option><option value="2">2个AI</option><option value="3">3个AI</option></select></label>
+        <button class="primary" id="startBtn">开始游戏</button>
       </div>
+      <div class="stat" style="margin-top:10px;text-align:center">例如：1真人+1AI、2真人+1AI、2真人+2AI、3真人+1AI都可以。</div>
     </section>
 
     <section id="game" class="hidden">
@@ -103,7 +105,7 @@
   function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1200); }
   function log(msg){ state.logs.unshift(msg); state.logs=state.logs.slice(0,100); renderLog(); }
   function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
-  function isHumanTurn(){ return state.turn===0; }
+  function isHumanTurn(){ return state.players && state.players[state.turn] && !state.players[state.turn].isAI; }
   function scheduleAI(delay=450){
     // 只要当前轮到AI，就安排AI自动执行；如果AI正在执行，不要重复启动，避免把玩家回合锁住。
     if(!state.players || !state.players[state.turn] || !state.players[state.turn].isAI || isGameOver()) return;
@@ -117,21 +119,25 @@
   }
 
   function startGame(){
+    const humanCount=Number($('humanCount').value);
     const aiCount=Number($('aiCount').value);
-    const n=aiCount+1, rule=dealRules[n], deck=newDeck();
-    state={n,aiCount,players:[],table:[],deck:[],turn:0,phase:'hand',selectedHand:null,selectedTable:null,drawn:null,logs:[],aiBusy:false};
-    state.players.push({name:'你',isAI:false,hand:deck.splice(0,rule.hand),captured:[]});
-    for(let i=1;i<n;i++) state.players.push({name:`AI ${i}`,isAI:true,hand:deck.splice(0,rule.hand),captured:[]});
+    const n=humanCount+aiCount;
+    if(n<2 || n>4){ toast('总人数必须是2~4人'); return; }
+    const rule=dealRules[n], deck=newDeck();
+    state={n,humanCount,aiCount,players:[],table:[],deck:[],turn:0,phase:'hand',selectedHand:null,selectedTable:null,drawn:null,logs:[],aiBusy:false};
+    for(let i=1;i<=humanCount;i++) state.players.push({name: humanCount===1 ? '你' : `玩家${i}`,isAI:false,hand:deck.splice(0,rule.hand),captured:[]});
+    for(let i=1;i<=aiCount;i++) state.players.push({name:`AI ${i}`,isAI:true,hand:deck.splice(0,rule.hand),captured:[]});
     state.table=deck.splice(0,rule.table); state.deck=deck;
     $('setup').classList.add('hidden'); $('game').classList.remove('hidden'); $('actionbar').classList.remove('hidden'); $('resultModal').classList.add('hidden');
-    log(`游戏开始：你 + ${aiCount}个AI，按${n}人局发牌。台面${rule.table}张，盖牌${state.deck.length}张。版本：玩家点击修复版。`);
+    log(`游戏开始：${humanCount}个真人 + ${aiCount}个AI，按${n}人局发牌。台面${rule.table}张，盖牌${state.deck.length}张。版本：自由人数版。`);
     render();
+    scheduleAI(500);
   }
 
   function normalizeTurnState(){
     if(!state || !state.players || !state.players[state.turn]) return;
     // 核心修复：只要已经轮到真人，但残留了AI的autoNext/next/忙碌状态，就强制还原为可操作手牌阶段。
-    if(state.turn===0){
+    if(isHumanTurn()){
       state.aiBusy=false;
       if(state.aiTimer){ clearTimeout(state.aiTimer); state.aiTimer=null; }
       if(!state.drawn && state.phase!=='draw' && state.phase!=='drawn') state.phase='hand';
@@ -166,7 +172,7 @@
   }
   function renderHand(){
     const p=state.players[state.turn]; els.handCards.innerHTML='';
-    els.turnTitle.textContent = p.isAI ? `${p.name} 正在思考` : '你的手牌';
+    els.turnTitle.textContent = p.isAI ? `${p.name} 正在思考` : `${p.name} 的手牌`;
     const hints={hand:'先选一张手牌。能凑10就选台面牌钓走；不能凑10就放到台面。',draw:'手牌处理完了，系统会自动摸盖牌。',drawn:'刚摸到的牌：能钓就选台面牌；不能钓会自动放台面。'};
     if(p.isAI){
       els.phaseHint.textContent='AI会自动：能钓就钓，不能钓就放一张较小的牌。';
@@ -254,7 +260,7 @@
   }
   function nextTurn(){ if(!isHumanTurn() || state.phase!=='next') return; goNextTurn(); }
   function goNextTurn(){
-    state.turn=(state.turn+state.n-1)%state.n; // 逆时针：玩家 -> 最后一个AI -> ... -> 玩家
+    state.turn=(state.turn+1)%state.n; // 按玩家顺序轮到下一家
     state.phase='hand'; state.selectedHand=null; state.selectedTable=null; state.drawn=null;
     log(`轮到 ${state.players[state.turn].name}。`);
     afterAction();
@@ -377,7 +383,7 @@
 
         // 4）无论AI刚才是钓了还是放了，都强制轮到下一家。
         if(state.phase==='autoNext'){
-          state.turn=(state.turn+state.n-1)%state.n;
+          state.turn=(state.turn+1)%state.n;
           state.phase='hand';
           state.selectedHand=null;
           state.selectedTable=null;
@@ -400,7 +406,7 @@
       if(isGameOver()){
         finishGame();
       }else{
-        if(state.players && state.turn===0){
+        if(state.players && isHumanTurn()){
           state.aiBusy=false;
           if(!state.drawn && state.phase!=='draw' && state.phase!=='drawn') state.phase='hand';
         }
@@ -420,6 +426,21 @@
     $('resultModal').classList.remove('hidden'); log('本局结束，开始结算红牌分。');
   }
 
+
+  function updateAiOptions(){
+    const h=Number($('humanCount').value);
+    const aiSel=$('aiCount');
+    [...aiSel.options].forEach(opt=>{
+      const total=h+Number(opt.value);
+      opt.disabled = total<2 || total>4;
+    });
+    if(aiSel.selectedOptions[0] && aiSel.selectedOptions[0].disabled){
+      for(const opt of aiSel.options){ if(!opt.disabled){ aiSel.value=opt.value; break; } }
+    }
+  }
+
+  $('humanCount').onchange=updateAiOptions;
+  updateAiOptions();
   $('startBtn').onclick=startGame;
   $('newGameBtn').onclick=()=>{ $('setup').classList.remove('hidden'); $('game').classList.add('hidden'); $('actionbar').classList.add('hidden'); };
   $('againBtn').onclick=startGame;
