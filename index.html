@@ -1,398 +1,438 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>潮汕钓红点｜联机出牌测试</title>
-<style>
-:root{--panel:#fff8e8;--green:#08723e;--gold:#ffc85a;--red:#c83131;--text:#2b2520}
-*{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans SC",Arial,sans-serif;background:linear-gradient(#053d27,#0b6b42);color:var(--text);min-height:100vh}
-header{color:#fff;text-align:center;padding:24px 14px 14px}
-h1{margin:0;font-size:32px}
-header p{margin:8px 0 0;color:#eafff4}
-.wrap{width:min(980px,94vw);margin:0 auto 40px}
-.card{background:var(--panel);border-radius:22px;padding:20px;margin:15px 0;box-shadow:0 10px 28px rgba(0,0,0,.18)}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-input{border:1px solid #ddd;border-radius:12px;padding:12px 14px;font-size:17px;background:#fff}
-button{border:0;border-radius:14px;padding:12px 16px;font-weight:800;font-size:17px;box-shadow:0 7px 16px rgba(0,0,0,.12);background:#fff;cursor:pointer}
-button:disabled{opacity:.45}
-.primary{background:var(--gold)}
-.danger{background:#ffd7d7;color:#a82424}
-.pill{display:inline-block;border-radius:999px;padding:8px 13px;background:#e7f6ed;color:var(--green);font-weight:800;margin:4px}
-.warn{background:#fff0d8;color:#9a5a00}
-.bad{background:#ffe0e0;color:#a82424}
-.muted{color:#766;font-size:15px;line-height:1.6}
-.roomno{font-size:30px;color:var(--green);font-weight:900;letter-spacing:2px}
-.player{display:flex;justify-content:space-between;align-items:center;border:1px solid #e7dfd0;background:#fff;border-radius:14px;padding:11px 13px;margin:8px 0;font-size:17px}
-.me{border:3px solid #2e8b57}.turn{background:#fff5c8;border-color:#f0c24d}
-.cards{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.poker{width:67px;height:94px;background:#fff;border-radius:12px;box-shadow:0 6px 14px rgba(0,0,0,.16);display:flex;flex-direction:column;justify-content:space-between;padding:8px;font-weight:900;font-size:22px;border:2px solid transparent;user-select:none}
-.poker.clickable{cursor:pointer;border-color:#3c9d65}
-.poker.selected{border-color:#ff9c00;transform:translateY(-5px)}
-.poker.match{border-color:#d52b2b;background:#fff6f6}
-.red{color:#c92b2b}.black{color:#222}
-.table{border:1px dashed #d8cbb8;border-radius:16px;padding:12px;margin-top:12px;background:rgba(255,255,255,.42);word-break:break-all}
-.log{max-height:220px;overflow:auto;background:#fff;border-radius:14px;padding:12px;border:1px solid #eee}
-.log div{border-bottom:1px dashed #eee;padding:6px 0;color:#555}
-.hide{display:none}
-.small{font-size:13px;color:#766}
-.actionbar{position:sticky;bottom:0;background:rgba(5,61,39,.94);padding:12px;margin:20px -20px -20px;border-radius:0 0 22px 22px}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>潮汕钓红点</title>
+  <style>
+    :root{
+      --bg:#0f5132; --panel:#fff8ec; --ink:#2d2520; --muted:#7a6d62; --red:#c62828;
+      --gold:#ffcc66; --green:#1d7a4d; --card:#fff; --shadow:rgba(0,0,0,.18);
+    }
+    *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",Arial,sans-serif;background:linear-gradient(180deg,#0c432b,#117044);color:var(--ink);min-height:100vh;}
+    header{padding:14px 16px;color:white;text-align:center;position:sticky;top:0;background:rgba(10,58,37,.88);backdrop-filter: blur(8px);z-index:3;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+    h1{font-size:22px;margin:0 0 4px;letter-spacing:.5px}.sub{font-size:12px;opacity:.9}
+    .wrap{max-width:1100px;margin:0 auto;padding:14px 12px 70px}.panel{background:var(--panel);border-radius:18px;padding:14px;box-shadow:0 8px 24px var(--shadow);margin-bottom:12px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}.center{justify-content:center}.hidden{display:none!important}
+    button,select{font:inherit;border:0;border-radius:12px;padding:10px 13px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12);color:var(--ink)}
+    button{cursor:pointer;font-weight:700}.primary{background:var(--gold)}.danger{background:#ffd7d7}.ok{background:#d8f4e6}.ghost{background:rgba(255,255,255,.7)}
+    button:disabled{opacity:.45;cursor:not-allowed}.tiny{font-size:12px;padding:6px 9px;border-radius:9px}.stat{font-size:13px;color:var(--muted)}
+    .players{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.player{background:#fff;border-radius:14px;padding:10px;border:2px solid transparent}.player.active{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,204,102,.25)}
+    .pname{font-weight:800}.score{font-size:18px;font-weight:900;color:#a65d00}.captured{font-size:12px;color:var(--muted);margin-top:4px}
+    .table-title{display:flex;align-items:center;justify-content:space-between;margin:3px 0 10px}.table-title b{font-size:16px}.hint{font-size:13px;color:#67584b;line-height:1.45}
+    .cards{display:flex;gap:8px;flex-wrap:wrap;min-height:86px}.hand{border-top:1px dashed #d8c8b5;padding-top:10px}.card{width:54px;height:74px;border-radius:10px;background:var(--card);box-shadow:0 3px 9px rgba(0,0,0,.18);display:flex;flex-direction:column;justify-content:space-between;padding:6px;user-select:none;border:2px solid transparent;position:relative}
+    .card .rank{font-weight:900;font-size:18px}.card .suit{font-size:22px;line-height:1;text-align:right}.red{color:var(--red)}.black{color:#222}.card.selectable{outline:3px solid rgba(255,204,102,.95); cursor:pointer; box-shadow:0 0 0 4px rgba(255,204,102,.18),0 3px 9px rgba(0,0,0,.18)}.card.selected{border-color:#ffb300;transform:translateY(-5px)}.card.pickable{border-color:#48a868;box-shadow:0 0 0 3px rgba(72,168,104,.2),0 3px 9px rgba(0,0,0,.18)}
+    .card.small{width:38px;height:52px;border-radius:7px;padding:4px}.card.small .rank{font-size:13px}.card.small .suit{font-size:15px}.deck{width:54px;height:74px;border-radius:10px;background:repeating-linear-gradient(45deg,#1b5e3a,#1b5e3a 5px,#24784c 5px,#24784c 10px);box-shadow:0 3px 9px rgba(0,0,0,.18);border:2px solid rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;color:white;font-weight:900}
+    .actionbar{position:fixed;bottom:0;left:0;right:0;padding:10px 12px;background:rgba(10,58,37,.94);display:flex;gap:8px;justify-content:center;z-index:4;box-shadow:0 -3px 12px rgba(0,0,0,.22)}
+    .log{max-height:150px;overflow:auto;background:#fff;border-radius:12px;padding:10px;font-size:13px;line-height:1.55;color:#4b4038}.log div{border-bottom:1px dashed #eee;padding:3px 0}.log div:last-child{border:0}
+    .toast{position:fixed;left:50%;bottom:72px;transform:translateX(-50%);background:#222;color:#fff;border-radius:999px;padding:10px 14px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:5}.toast.show{opacity:1;bottom:86px}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:18px;z-index:10}.modalbox{background:var(--panel);border-radius:20px;padding:18px;max-width:520px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+    .modalbox h2{margin:0 0 10px}.result-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #d7c6b1}.win{font-weight:900;color:#a65d00}.rules{font-size:13px;color:#5a4d43;line-height:1.65}.rules b{color:#2d2520}
+    @media (max-width:520px){.card{width:48px;height:68px}.deck{width:48px;height:68px}.wrap{padding-left:8px;padding-right:8px}.panel{border-radius:15px;padding:11px}.cards{gap:6px}.actionbar button{padding:10px 9px;font-size:14px}}
+  </style>
 </head>
 <body>
-<header>
-  <h1>潮汕钓红点</h1>
-  <p>联机出牌测试版：2–4真人轮流玩，先不加AI</p>
-</header>
-
-<div class="wrap">
-  <section id="entry" class="card">
-    <h2>进入联机房间</h2>
-    <p class="muted">版本：playtest1。房主创建房间，朋友输入房间号加入。至少2人后，房主开始游戏。</p>
-    <div class="row">
-      <input id="nameInput" placeholder="你的名字，例如：爸爸/妈妈/小宝" />
-      <button class="primary" id="createBtn">创建房间</button>
-    </div>
-    <div class="row" style="margin-top:14px">
-      <input id="roomInput" placeholder="输入6位房间号" inputmode="numeric" />
-      <button id="joinBtn">加入房间</button>
-    </div>
-  </section>
-
-  <section id="roomPanel" class="card hide">
-    <div class="row" style="justify-content:space-between">
-      <div>
-        <div>房间：<span id="roomIdText" class="roomno"></span></div>
-        <span id="statusText" class="pill">等待中</span>
-        <span id="countText" class="pill">0 人在线</span>
-        <span id="identityText" class="pill warn"></span>
+  <header><h1>潮汕钓红点</h1><div class="sub">凑10钓牌 · 只算红牌分 · 单人对战AI · 修复版</div></header>
+  <div class="wrap">
+    <section id="setup" class="panel">
+      <div class="row between"><div><b>开始一局</b><div class="stat">选择AI数量后，自动按2/3/4人规则发牌</div></div><button class="ghost" id="ruleBtn">规则</button></div>
+      <div class="row center" style="margin-top:12px">
+        <label>AI数量：<select id="aiCount"><option value="1">1个AI（2人局）</option><option value="2">2个AI（3人局）</option><option value="3">3个AI（4人局）</option></select></label>
+        <button class="primary" id="startBtn">开始人机局</button>
       </div>
-      <button class="danger" id="leaveBtn">离开</button>
-    </div>
-    <p class="muted">分享链接：</p>
-    <div class="table" id="shareLink"></div>
-  </section>
+    </section>
 
-  <section id="playersPanel" class="card hide">
-    <h2>房间玩家</h2>
-    <div id="playersList"></div>
-    <div class="row" style="margin-top:14px">
-      <button class="primary" id="startBtn">房主开始游戏</button>
-      <button id="resetBtn">重新等待</button>
-    </div>
-  </section>
+    <section id="game" class="hidden">
+      <section class="panel">
+        <div class="players" id="players"></div>
+      </section>
 
-  <section id="gamePanel" class="card hide">
-    <h2>牌局</h2>
-    <div class="row">
-      <span class="pill" id="ruleText">未开始</span>
-      <span class="pill" id="deckText">盖牌：0</span>
-      <span class="pill warn" id="turnText"></span>
-    </div>
+      <section class="panel">
+        <div class="table-title"><b>台面牌</b><span class="stat">剩余盖牌：<span id="deckCount">0</span></span></div>
+        <div class="cards" id="tableCards"></div>
+      </section>
 
-    <div id="hint" class="table"></div>
+      <section class="panel">
+        <div class="table-title"><b id="turnTitle">玩家1 的手牌</b><span class="hint" id="phaseHint">请选择一张手牌</span></div>
+        <div class="cards hand" id="handCards"></div>
+      </section>
 
-    <h3>台面牌</h3>
-    <div id="tableCards" class="cards"></div>
+      <section class="panel">
+        <div class="row between"><b>操作记录</b><button class="tiny" id="newGameBtn">重开</button></div>
+        <div class="log" id="log"></div>
+      </section>
+    </section>
+  </div>
 
-    <h3>你摸到的盖牌</h3>
-    <div id="pendingCard" class="cards"></div>
+  <div class="actionbar hidden" id="actionbar">
+    <button id="fishBtn" class="ok" disabled>钓走</button>
+    <button id="dropBtn" class="danger" disabled>放到台面</button>
+    <button id="drawBtn" class="primary" disabled>摸盖牌</button>
+  </div>
+  <div class="toast" id="toast"></div>
 
-    <h3>你的手牌</h3>
-    <div id="myHand" class="cards"></div>
+  <div class="modal hidden" id="ruleModal"><div class="modalbox"><h2>规则说明</h2><div class="rules">
+    <p><b>发牌：</b>去掉大小王，共52张。2人各10张、台面12张、盖牌20张；3人各7张、台面10张、盖牌21张；4人各5张、台面12张、盖牌20张。</p>
+    <p><b>凑10：</b>A配9、2配8、3配7、4配6、5配5；10钓10、J钓J、Q钓Q、K钓K。</p>
+    <p><b>流程：</b>先用手牌钓台面，不能钓就放一张到台面；然后摸盖牌，能钓继续钓，不能就放台面；逆时针轮下一家，直到手牌和盖牌都用完。</p>
+    <p><b>计分：</b>只算红牌♥♦。A=20分，2~8按数字，9/10/J/Q/K各10分，分高者赢。</p>
+  </div><div class="row center"><button class="primary" id="closeRule">知道了</button></div></div></div>
 
-    <h3>其他玩家</h3>
-    <div id="otherHands"></div>
+  <div class="modal hidden" id="resultModal"><div class="modalbox"><h2>本局结束</h2><div id="results"></div><div class="row center" style="margin-top:14px"><button class="primary" id="againBtn">再来一局</button></div></div></div>
 
-    <div class="actionbar row">
-      <button id="putBtn">放到台面</button>
-      <button id="cancelBtn">取消选择</button>
-      <button id="restartBtn" class="danger">房主重开</button>
-    </div>
-  </section>
+<script>
+(() => {
+  const suits = [{s:'♥',red:true},{s:'♦',red:true},{s:'♣',red:false},{s:'♠',red:false}];
+  const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+  const dealRules = {2:{hand:10,table:12},3:{hand:7,table:10},4:{hand:5,table:12}};
+  let state = {};
+  const $ = id => document.getElementById(id);
+  const els = ['setup','game','players','tableCards','handCards','deckCount','turnTitle','phaseHint','log','actionbar','fishBtn','dropBtn','drawBtn','resultModal','results'].reduce((a,id)=>(a[id]=$(id),a),{});
 
-  <section class="card">
-    <h2>操作记录</h2>
-    <div id="logs" class="log"></div>
-  </section>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getDatabase, ref, set, update, onValue, get, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCgr8wLKe_BfWRs2mnSeEJVd7LggNa7uEY",
-  authDomain: "diaohongdian.firebaseapp.com",
-  databaseURL: "https://diaohongdian-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "diaohongdian",
-  storageBucket: "diaohongdian.firebasestorage.app",
-  messagingSenderId: "494073636915",
-  appId: "1:494073636915:web:eec07630e901382d329b46",
-  measurementId: "G-VXVECSZLHB"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-let roomId="", currentRoom=null, isHost=false;
-let playerId=localStorage.getItem("dhd_player_id_online");
-if(!playerId){playerId="p_"+Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-4);localStorage.setItem("dhd_player_id_online",playerId)}
-let selectedHandIndex=null;
-const $=id=>document.getElementById(id);
-
-function randomRoom(){return String(Math.floor(100000+Math.random()*900000))}
-function name(){return ($("nameInput").value||localStorage.getItem("dhd_name")||("玩家"+playerId.slice(2,6))).trim().slice(0,10)}
-function escapeHTML(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
-function color(s){return (s==="♥"||s==="♦")?"red":"black"}
-function cardValueRank(r){if(r==="A")return 1;if(["J","Q","K"].includes(r))return r;return Number(r)}
-function canCatch(a,b){
-  const av=cardValueRank(a.rank), bv=cardValueRank(b.rank);
-  if(typeof av==="number" && typeof bv==="number"){
-    if(av===10 && bv===10)return true;
-    return av+bv===10;
+  function newDeck(){
+    const deck=[]; let id=0;
+    for(const suit of suits) for(const rank of ranks) deck.push({id:id++,rank,suit:suit.s,red:suit.red});
+    return shuffle(deck);
   }
-  return a.rank===b.rank;
-}
-function redScore(c){
-  if(!(c.suit==="♥"||c.suit==="♦"))return 0;
-  if(c.rank==="A")return 20;
-  if(["J","Q","K","10","9"].includes(c.rank))return 10;
-  return Number(c.rank)||0;
-}
-function cardText(c){return c.rank+c.suit}
-function deckBuild(){
-  const suits=["♠","♥","♣","♦"], ranks=["A","2","3","4","5","6","7","8","9","10","J","Q","K"], deck=[];
-  suits.forEach(s=>ranks.forEach(r=>deck.push({rank:r,suit:s,id:r+s+"_"+Math.random().toString(36).slice(2,5)})));
-  for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]]}
-  return deck;
-}
-function deal(players){
-  let handCount,tableCount,total=players.length;
-  if(total===2){handCount=10;tableCount=12}else if(total===3){handCount=7;tableCount=10}else{handCount=5;tableCount=12}
-  const deck=deckBuild(), hands={}, captured={};
-  players.forEach(p=>{hands[p.id]=deck.splice(0,handCount);captured[p.id]=[]});
-  const tableCards=deck.splice(0,tableCount);
-  return {hands,captured,tableCards,deck,handCount,tableCount,phase:"hand",pendingCard:null,finished:false};
-}
-function playersSorted(room=currentRoom){return Object.values(room.players||{}).sort((a,b)=>(a.joinedAt||0)-(b.joinedAt||0)).filter(p=>p.online!==false)}
-function currentPlayer(room=currentRoom){
-  const order=room.playerOrder||[];
-  return order[room.currentTurn||0];
-}
-function nextIndex(game,room){
-  const order=room.playerOrder||[];
-  if(!order.length)return 0;
-  for(let step=1;step<=order.length;step++){
-    const ni=((room.currentTurn||0)+step)%order.length;
-    const pid=order[ni];
-    if((game.hands?.[pid]||[]).length>0 || (game.deck||[]).length>0) return ni;
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+  function matchValue(card){ if(card.rank==='A') return 1; if(['J','Q','K'].includes(card.rank)) return card.rank; return Number(card.rank); }
+  function canMatch(a,b){ const av=matchValue(a), bv=matchValue(b); if(typeof av==='number'&&typeof bv==='number'){ if(av===10||bv===10) return av===10&&bv===10; return av+bv===10; } return av===bv; }
+  function redScore(c){ if(!c.red) return 0; if(c.rank==='A') return 20; if(['J','Q','K','10','9'].includes(c.rank)) return 10; return Number(c.rank); }
+  function cardText(c){ return `${c.rank}${c.suit}`; }
+  function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1200); }
+  function log(msg){ state.logs.unshift(msg); state.logs=state.logs.slice(0,100); renderLog(); }
+  function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+  function isHumanTurn(){ return state.turn===0; }
+  function scheduleAI(delay=450){
+    // 只要当前轮到AI，就安排AI自动执行；如果AI正在执行，不要重复启动，避免把玩家回合锁住。
+    if(!state.players || !state.players[state.turn] || !state.players[state.turn].isAI || isGameOver()) return;
+    if(state.aiBusy) return;
+    if(state.aiTimer) clearTimeout(state.aiTimer);
+    state.aiTimer=setTimeout(()=>{
+      if(state.players && state.players[state.turn] && state.players[state.turn].isAI && !state.aiBusy && !isGameOver()){
+        runAI();
+      }
+    }, delay);
   }
-  return ((room.currentTurn||0)+1)%order.length;
-}
-function isGameOver(game){
-  const handsEmpty=Object.values(game.hands||{}).every(h=>!h || h.length===0);
-  return handsEmpty && (!game.deck || game.deck.length===0) && !game.pendingCard;
-}
-async function addLog(text){
-  const snap=await get(ref(db,`rooms/${roomId}/logs`));
-  const logs=snap.val()||[];
-  logs.push(text);
-  if(logs.length>120)logs.splice(0,logs.length-120);
-  await set(ref(db,`rooms/${roomId}/logs`),logs);
-}
 
-async function createRoom(){
-  const n=name();localStorage.setItem("dhd_name",n);roomId=randomRoom();
-  await set(ref(db,"rooms/"+roomId),{roomId,status:"waiting",hostId:playerId,createdAt:Date.now(),players:{[playerId]:{id:playerId,name:n,host:true,online:true,joinedAt:Date.now(),lastSeen:serverTimestamp()}},logs:[`${n} 创建房间。`]});
-  await onDisconnect(ref(db,`rooms/${roomId}/players/${playerId}/online`)).set(false);
-  enter(roomId);
-}
-async function joinRoom(id){
-  const n=name();localStorage.setItem("dhd_name",n);roomId=(id||$("roomInput").value||"").trim();
-  if(!/^\d{6}$/.test(roomId)){alert("请输入6位房间号");return}
-  const snap=await get(ref(db,"rooms/"+roomId)); if(!snap.exists()){alert("房间不存在");return}
-  const room=snap.val(); const ps=room.players||{};
-  if(!ps[playerId] && Object.keys(ps).length>=4){alert("房间已满4人");return}
-  await update(ref(db,`rooms/${roomId}/players/${playerId}`),{id:playerId,name:n,host:false,online:true,joinedAt:Date.now(),lastSeen:serverTimestamp()});
-  await addLog(`${n} 加入房间。`);
-  await onDisconnect(ref(db,`rooms/${roomId}/players/${playerId}/online`)).set(false);
-  enter(roomId);
-}
-function enter(id){
-  roomId=id;$("entry").classList.add("hide");$("roomPanel").classList.remove("hide");$("playersPanel").classList.remove("hide");
-  $("roomIdText").textContent=roomId;$("identityText").textContent="你的ID："+playerId.slice(0,10);
-  $("shareLink").textContent=`${location.origin}${location.pathname}?room=${roomId}&v=playtest1`;
-  onValue(ref(db,"rooms/"+roomId),snap=>{if(!snap.exists())return;currentRoom=snap.val();render()});
-}
-function cardEl(c,cls="",onclick=null){
-  const d=document.createElement("div");d.className="poker "+color(c.suit)+" "+cls;d.innerHTML=`<div>${c.rank}</div><div style="font-size:28px;text-align:right">${c.suit}</div>`;
-  if(onclick)d.onclick=onclick;return d;
-}
-function render(){
-  const room=currentRoom, ps=playersSorted(room), game=room.game;
-  isHost=room.hostId===playerId;
-  $("statusText").textContent=room.status==="playing"?"游戏中":room.status==="finished"?"已结束":"等待中";
-  $("countText").textContent=`${ps.length} 人在线`;
-  $("startBtn").style.display=isHost?"inline-block":"none";
-  $("resetBtn").style.display=isHost?"inline-block":"none";
-  $("restartBtn").style.display=isHost?"inline-block":"none";
-  const cur=currentPlayer(room);
-  const list=$("playersList");list.innerHTML="";
-  ps.forEach((p,i)=>{
-    const div=document.createElement("div");div.className="player "+(p.id===playerId?"me ":"")+(p.id===cur?"turn":"");
-    div.innerHTML=`<span>${i+1}. ${escapeHTML(p.name)} ${p.id===room.hostId?"（房主）":""} ${p.id===playerId?"（你）":""}</span><span>${p.id===cur?"轮到TA":"在线"}</span>`;
-    list.appendChild(div);
-  });
-  if(game){
-    $("gamePanel").classList.remove("hide");
-    $("ruleText").textContent=`${(room.playerOrder||[]).length}人规则：每人${game.handCount}张，台面${game.tableCount}张`;
-    $("deckText").textContent=`盖牌：${(game.deck||[]).length}`;
-    const curP=ps.find(p=>p.id===cur);
-    $("turnText").textContent=game.finished?"游戏结束":`轮到：${curP?.name||cur}`;
-    renderGame(room,game,ps,cur);
-  }else $("gamePanel").classList.add("hide");
-  const logs=room.logs||[];$("logs").innerHTML="";
-  [...logs].reverse().slice(0,50).forEach(t=>{const d=document.createElement("div");d.textContent=t;$("logs").appendChild(d)});
-}
-function renderGame(room,game,ps,cur){
-  const myTurn=cur===playerId && !game.finished;
-  const myHand=game.hands?.[playerId]||[];
-  const table=$("tableCards");table.innerHTML="";
-  const selected=selectedHandIndex!=null?myHand[selectedHandIndex]:null;
-  const pending=game.pendingCard;
-  const phase=game.phase||"hand";
-  let matches=[];
-  if(myTurn && phase==="hand" && selected) matches=game.tableCards.map((c,i)=>canCatch(selected,c)?i:null).filter(i=>i!==null);
-  if(myTurn && phase==="draw" && pending) matches=game.tableCards.map((c,i)=>canCatch(pending,c)?i:null).filter(i=>i!==null);
-
-  (game.tableCards||[]).forEach((c,i)=>{
-    const isMatch=matches.includes(i);
-    table.appendChild(cardEl(c,isMatch?"match clickable":"", isMatch?()=>catchTable(i):null));
-  });
-
-  const pendingBox=$("pendingCard");pendingBox.innerHTML="";
-  if(pending) pendingBox.appendChild(cardEl(pending,myTurn&&phase==="draw"?"selected":""));
-
-  const handBox=$("myHand");handBox.innerHTML="";
-  myHand.forEach((c,i)=>{
-    const clickable=myTurn && phase==="hand";
-    handBox.appendChild(cardEl(c,(clickable?"clickable ":"")+(selectedHandIndex===i?"selected":""), clickable?()=>selectHand(i):null));
-  });
-
-  const other=$("otherHands");other.innerHTML="";
-  ps.filter(p=>p.id!==playerId).forEach(p=>{
-    const cap=(game.captured?.[p.id]||[]).reduce((s,c)=>s+redScore(c),0);
-    const div=document.createElement("div");div.className="player "+(p.id===cur?"turn":"");
-    div.innerHTML=`<span>${escapeHTML(p.name)} ${p.id===cur?"（当前）":""}</span><span>手牌 ${(game.hands?.[p.id]||[]).length} 张｜红牌 ${cap}分</span>`;
-    other.appendChild(div);
-  });
-
-  const myScore=(game.captured?.[playerId]||[]).reduce((s,c)=>s+redScore(c),0);
-  let hint="";
-  if(game.finished){
-    const scores=ps.map(p=>({name:p.name,score:(game.captured?.[p.id]||[]).reduce((s,c)=>s+redScore(c),0)})).sort((a,b)=>b.score-a.score);
-    hint="游戏结束｜"+scores.map(s=>`${s.name}：${s.score}分`).join("，");
-  }else if(!myTurn){
-    hint=`现在不是你的回合，请等待。你的红牌分：${myScore}`;
-  }else if(phase==="hand"){
-    hint=selected? (matches.length?`你选择了 ${cardText(selected)}，请选择台面可钓的牌。`:`你选择了 ${cardText(selected)}，不能钓，点“放到台面”。`) : "轮到你：先点一张手牌。";
-  }else if(phase==="draw"){
-    hint=matches.length?`你摸到 ${cardText(pending)}，请选择台面可钓的牌。`:`你摸到 ${cardText(pending)}，不能钓，系统应自动放台面。`;
+  function startGame(){
+    const aiCount=Number($('aiCount').value);
+    const n=aiCount+1, rule=dealRules[n], deck=newDeck();
+    state={n,aiCount,players:[],table:[],deck:[],turn:0,phase:'hand',selectedHand:null,selectedTable:null,drawn:null,logs:[],aiBusy:false};
+    state.players.push({name:'你',isAI:false,hand:deck.splice(0,rule.hand),captured:[]});
+    for(let i=1;i<n;i++) state.players.push({name:`AI ${i}`,isAI:true,hand:deck.splice(0,rule.hand),captured:[]});
+    state.table=deck.splice(0,rule.table); state.deck=deck;
+    $('setup').classList.add('hidden'); $('game').classList.remove('hidden'); $('actionbar').classList.remove('hidden'); $('resultModal').classList.add('hidden');
+    log(`游戏开始：你 + ${aiCount}个AI，按${n}人局发牌。台面${rule.table}张，盖牌${state.deck.length}张。版本：玩家点击修复版。`);
+    render();
   }
-  $("hint").textContent=hint;
-  $("putBtn").disabled=!(myTurn && phase==="hand" && selectedHandIndex!=null);
-  $("cancelBtn").disabled=!(selectedHandIndex!=null);
-}
-function selectHand(i){selectedHandIndex=i;render()}
-async function catchTable(tableIndex){
-  const room=currentRoom, game=structuredClone(room.game), pid=playerId;
-  if(currentPlayer(room)!==pid)return;
-  let takeCard;
-  if(game.phase==="hand"){
-    if(selectedHandIndex==null)return;
-    takeCard=game.hands[pid][selectedHandIndex];
-    const tableCard=game.tableCards[tableIndex];
-    if(!canCatch(takeCard,tableCard))return;
-    game.hands[pid].splice(selectedHandIndex,1);
-    game.tableCards.splice(tableIndex,1);
-    game.captured[pid]=(game.captured[pid]||[]).concat([takeCard,tableCard]);
-    selectedHandIndex=null;
-    await addLog(`${playerNameById(pid)} 用 ${cardText(takeCard)} 钓走 ${cardText(tableCard)}，红牌 +${redScore(takeCard)+redScore(tableCard)}。`);
-    await afterHandResolved(game,room,pid);
-  }else if(game.phase==="draw"){
-    takeCard=game.pendingCard;
-    const tableCard=game.tableCards[tableIndex];
-    if(!takeCard||!canCatch(takeCard,tableCard))return;
-    game.pendingCard=null;
-    game.tableCards.splice(tableIndex,1);
-    game.captured[pid]=(game.captured[pid]||[]).concat([takeCard,tableCard]);
-    await addLog(`${playerNameById(pid)} 摸到 ${cardText(takeCard)}，钓走 ${cardText(tableCard)}，红牌 +${redScore(takeCard)+redScore(tableCard)}。`);
-    finishTurn(game,room);
-    await saveGame(game,room);
-  }
-}
-async function putSelected(){
-  const room=currentRoom, game=structuredClone(room.game), pid=playerId;
-  if(currentPlayer(room)!==pid || game.phase!=="hand" || selectedHandIndex==null)return;
-  const card=game.hands[pid].splice(selectedHandIndex,1)[0];
-  game.tableCards.push(card);
-  selectedHandIndex=null;
-  await addLog(`${playerNameById(pid)} 放下 ${cardText(card)} 到台面。`);
-  await afterHandResolved(game,room,pid);
-}
-async function afterHandResolved(game,room,pid){
-  if((game.deck||[]).length>0){
-    const draw=game.deck.shift();
-    const matches=game.tableCards.some(c=>canCatch(draw,c));
-    if(matches){
-      game.pendingCard=draw; game.phase="draw";
-      await addLog(`${playerNameById(pid)} 摸了一张盖牌，请处理。`);
-      await saveGame(game,room);
-    }else{
-      game.tableCards.push(draw);
-      await addLog(`${playerNameById(pid)} 摸到 ${cardText(draw)}，无法钓，自动放到台面。`);
-      finishTurn(game,room);
-      await saveGame(game,room);
+
+  function normalizeTurnState(){
+    if(!state || !state.players || !state.players[state.turn]) return;
+    // 核心修复：只要已经轮到真人，但残留了AI的autoNext/next/忙碌状态，就强制还原为可操作手牌阶段。
+    if(state.turn===0){
+      state.aiBusy=false;
+      if(state.aiTimer){ clearTimeout(state.aiTimer); state.aiTimer=null; }
+      if(!state.drawn && state.phase!=='draw' && state.phase!=='drawn') state.phase='hand';
     }
-  }else{
-    finishTurn(game,room);
-    await saveGame(game,room);
   }
-}
-function finishTurn(game,room){
-  game.phase="hand"; game.pendingCard=null;
-  if(isGameOver(game)){
-    game.finished=true;
-    room.status="finished";
-  }else{
-    room.currentTurn=nextIndex(game,room);
+  function render(){ normalizeTurnState(); renderPlayers(); renderTable(); renderHand(); renderButtons(); renderLog(); }
+  function renderPlayers(){
+    els.players.innerHTML='';
+    state.players.forEach((p,i)=>{
+      const score=p.captured.reduce((s,c)=>s+redScore(c),0);
+      const div=document.createElement('div'); div.className='player'+(i===state.turn?' active':'');
+      div.innerHTML=`<div class="pname">${p.name}${i===state.turn?'（当前）':''}</div><div>红牌分：<span class="score">${score}</span></div><div class="captured">手牌 ${p.hand.length} 张 · 已钓 ${p.captured.length} 张</div>`;
+      els.players.appendChild(div);
+    });
   }
-}
-async function saveGame(game,room){
-  const updates={game,currentTurn:room.currentTurn,status:game.finished?"finished":"playing"};
-  await update(ref(db,`rooms/${roomId}`),updates);
-  if(game.finished) await addLog("游戏结束。");
-}
-function playerNameById(id){return (currentRoom.players?.[id]?.name)||id.slice(0,6)}
-async function startGame(){
-  if(!isHost){alert("只有房主可以开始");return}
-  const ps=playersSorted();
-  if(ps.length<2){alert("至少2人");return}
-  const game=deal(ps);
-  await update(ref(db,`rooms/${roomId}`),{status:"playing",playerOrder:ps.map(p=>p.id),currentTurn:0,game});
-  await addLog(`开始游戏：${ps.length}人，${ps.map(p=>p.name).join("、")}。`);
-}
-async function resetRoom(){
-  if(!isHost)return;
-  selectedHandIndex=null;
-  await update(ref(db,`rooms/${roomId}`),{status:"waiting",game:null,currentTurn:null,playerOrder:null});
-  await addLog("房主重置房间。");
-}
-async function leave(){if(roomId)await update(ref(db,`rooms/${roomId}/players/${playerId}`),{online:false});location.href=location.origin+location.pathname}
-$("createBtn").onclick=createRoom;$("joinBtn").onclick=()=>joinRoom();$("startBtn").onclick=startGame;$("resetBtn").onclick=resetRoom;$("restartBtn").onclick=resetRoom;$("leaveBtn").onclick=leave;$("putBtn").onclick=putSelected;$("cancelBtn").onclick=()=>{selectedHandIndex=null;render()};
-const params=new URLSearchParams(location.search);const r=params.get("room");if(r){$("roomInput").value=r;$("nameInput").value=localStorage.getItem("dhd_name")||""}
+  function makeCard(c, cls='', onClick){
+    const div=document.createElement('div'); div.className='card '+(c.red?'red':'black')+' '+cls; div.innerHTML=`<div class="rank">${c.rank}</div><div class="suit">${c.suit}</div>`; if(onClick) div.onclick=onClick; return div;
+  }
+  function cardBack(cls=''){
+    const d=document.createElement('div'); d.className='deck '+cls; d.textContent='AI'; return d;
+  }
+  function renderTable(){
+    els.tableCards.innerHTML='';
+    state.table.forEach(c=>{
+      let cls='';
+      const activeCard = state.phase==='hand' ? getSelectedHand() : state.drawn;
+      if(isHumanTurn() && activeCard && canMatch(activeCard,c)) cls+=' pickable';
+      if(state.selectedTable===c.id) cls+=' selected';
+      els.tableCards.appendChild(makeCard(c,cls,()=>selectTable(c.id)));
+    });
+    els.deckCount.textContent=state.deck.length;
+  }
+  function renderHand(){
+    const p=state.players[state.turn]; els.handCards.innerHTML='';
+    els.turnTitle.textContent = p.isAI ? `${p.name} 正在思考` : '你的手牌';
+    const hints={hand:'先选一张手牌。能凑10就选台面牌钓走；不能凑10就放到台面。',draw:'手牌处理完了，系统会自动摸盖牌。',drawn:'刚摸到的牌：能钓就选台面牌；不能钓会自动放台面。'};
+    if(p.isAI){
+      els.phaseHint.textContent='AI会自动：能钓就钓，不能钓就放一张较小的牌。';
+      for(let i=0;i<p.hand.length;i++) els.handCards.appendChild(cardBack());
+      return;
+    }
+    els.phaseHint.textContent=hints[state.phase]||'';
+    if(state.phase==='drawn' && state.drawn){
+      const label=document.createElement('div'); label.className='hint'; label.style.width='100%'; label.textContent='摸到的盖牌：'; els.handCards.appendChild(label);
+      els.handCards.appendChild(makeCard(state.drawn,'selected'));
+      return;
+    }
+    p.hand.forEach(c=>{
+      const cls=(state.selectedHand===c.id?'selected ':'') + (isHumanTurn() && !state.drawn && state.phase!=='draw' ? 'selectable':'');
+      els.handCards.appendChild(makeCard(c,cls,()=>selectHand(c.id)));
+    });
+    if(state.phase==='draw'){
+      const d=document.createElement('div'); d.className='deck'; d.textContent='摸牌'; d.onclick=drawDeck; els.handCards.appendChild(d);
+    }
+  }
+  function renderButtons(){
+    normalizeTurnState();
+    const hand=getSelectedHand(), table=getSelectedTable(), drawn=state.drawn, human=isHumanTurn();
+    els.fishBtn.disabled=!(human && table && ((state.phase==='hand'&&hand&&canMatch(hand,table))||(state.phase==='drawn'&&drawn&&canMatch(drawn,table))));
+    els.dropBtn.disabled=!(human && ((state.phase==='hand'&&hand)||(state.phase==='drawn'&&drawn)));
+    els.drawBtn.disabled=true;
+  }
+  function renderLog(){ els.log.innerHTML=(state.logs||[]).map(x=>`<div>${x}</div>`).join(''); }
+  function getSelectedHand(){ return state.players[state.turn].hand.find(c=>c.id===state.selectedHand); }
+  function getSelectedTable(){ return state.table.find(c=>c.id===state.selectedTable); }
+
+  function selectHand(id){
+    if(!isHumanTurn()) return;
+    // 核心修复：有时AI自动流程结束后，画面已轮到你，但phase残留autoNext/next，导致点不了牌。
+    // 这里直接纠正为hand，保证玩家回合一定可以选手牌。
+    if(state.drawn) return;
+    if(state.phase!=='hand') state.phase='hand';
+    state.selectedHand = state.selectedHand===id ? null : id;
+    state.selectedTable=null;
+    render();
+  }
+  function selectTable(id){
+    if(!isHumanTurn()) return;
+    const card = state.table.find(c=>c.id===id); const active = state.phase==='hand'?getSelectedHand():state.drawn;
+    if(!active){ toast('先选一张手牌或摸到的牌'); return; }
+    if(!canMatch(active,card)){ toast('这两张不能凑10/同点'); return; }
+    state.selectedTable = state.selectedTable===id ? null : id; render();
+  }
+  function fish(){
+    if(!isHumanTurn()) return;
+    const table=getSelectedTable(); if(!table) return;
+    const p=state.players[state.turn];
+    let active;
+    if(state.phase==='hand'){
+      active=getSelectedHand(); p.hand=p.hand.filter(c=>c.id!==active.id); state.phase='draw';
+    }else if(state.phase==='drawn'){
+      active=state.drawn; state.drawn=null; state.phase='autoNext';
+    }
+    state.table=state.table.filter(c=>c.id!==table.id); p.captured.push(active,table);
+    log(`${p.name} 用 ${cardText(active)} 钓走 ${cardText(table)}，获得红牌分 +${redScore(active)+redScore(table)}。`);
+    state.selectedHand=null; state.selectedTable=null; afterAction();
+  }
+  function drop(){
+    if(!isHumanTurn()) return;
+    const p=state.players[state.turn];
+    if(state.phase==='hand'){
+      const c=getSelectedHand(); if(!c) return;
+      p.hand=p.hand.filter(x=>x.id!==c.id); state.table.push(c); log(`${p.name} 放下 ${cardText(c)} 到台面。`); state.selectedHand=null; state.phase='draw';
+    } else if(state.phase==='drawn'){
+      const c=state.drawn; state.table.push(c); log(`${p.name} 摸到 ${cardText(c)}，无法钓，放到台面。`); state.drawn=null; state.phase='autoNext';
+    }
+    afterAction();
+  }
+  function drawDeck(){
+    if(!isHumanTurn() || state.phase!=='draw') return;
+    drawForCurrentPlayer();
+    render();
+    if(state.phase==='drawn' && !state.table.some(t=>canMatch(state.drawn,t))) toast('这张盖牌不能钓，请放到台面');
+  }
+  function drawForCurrentPlayer(){
+    if(state.deck.length===0){ state.phase='autoNext'; return null; }
+    state.drawn=state.deck.shift(); state.phase='drawn'; state.selectedTable=null;
+    log(`${state.players[state.turn].name} 摸了一张盖牌：${cardText(state.drawn)}。`);
+    return state.drawn;
+  }
+  function nextTurn(){ if(!isHumanTurn() || state.phase!=='next') return; goNextTurn(); }
+  function goNextTurn(){
+    state.turn=(state.turn+state.n-1)%state.n; // 逆时针：玩家 -> 最后一个AI -> ... -> 玩家
+    state.phase='hand'; state.selectedHand=null; state.selectedTable=null; state.drawn=null;
+    log(`轮到 ${state.players[state.turn].name}。`);
+    afterAction();
+  }
+  function afterAction(){
+    if(isGameOver()) return finishGame();
+    if(state.phase==='draw'){
+      if(state.deck.length===0){
+        log('盖牌已摸完，直接轮下一家。');
+        return setTimeout(goNextTurn, 350);
+      }
+      // 玩家手牌动作完成后，系统自动摸一张盖牌；AI也走自动流程。
+      render();
+      if(isHumanTurn()) return setTimeout(autoDrawForHuman, 350);
+    }
+    if(state.phase==='autoNext'){
+      render();
+      return setTimeout(goNextTurn, 450);
+    }
+    render();
+    scheduleAI(450);
+  }
+
+  function autoDrawForHuman(){
+    if(!isHumanTurn() || state.phase!=='draw') return;
+    drawForCurrentPlayer();
+    render();
+    if(state.phase==='drawn' && state.drawn && !state.table.some(t=>canMatch(state.drawn,t))){
+      const c=state.drawn;
+      setTimeout(()=>{
+        if(!isHumanTurn() || state.phase!=='drawn' || !state.drawn) return;
+        state.drawn=null;
+        state.table.push(c);
+        log(`你摸到 ${cardText(c)}，无法钓，系统自动放到台面。`);
+        state.phase='autoNext';
+        afterAction();
+      }, 650);
+    }
+  }
+  function isGameOver(){ return state.deck.length===0 && state.players.every(p=>p.hand.length===0) && !state.drawn; }
+
+  function bestMatchFor(card){
+    const matches=state.table.filter(t=>canMatch(card,t));
+    if(!matches.length) return null;
+    return matches.sort((a,b)=>redScore(b)-redScore(a))[0];
+  }
+  function cardWeightForDrop(c){
+    // AI不能钓时尽量先丢黑牌、小分牌；红A和红10分牌尽量留着。
+    return (c.red?100:0) + redScore(c) + (c.rank==='A'?20:0);
+  }
+  async function runAI(){
+    if(!state.players || !state.players[state.turn] || !state.players[state.turn].isAI || state.aiBusy) return;
+    state.aiBusy=true;
+    try{
+      render();
+      await sleep(450);
+      // AI会连续自动走，直到轮到真人玩家或游戏结束。
+      while(state.players[state.turn] && state.players[state.turn].isAI && !isGameOver()){
+        const p=state.players[state.turn];
+
+        // 1）AI先处理自己的手牌：能钓就选收益最高的一组；不能钓就放一张最不值钱的牌。
+        if(state.phase==='hand'){
+          let move=null;
+          for(const c of p.hand){
+            const t=bestMatchFor(c);
+            if(t){
+              const gain=redScore(c)+redScore(t);
+              if(!move || gain>move.gain) move={card:c,table:t,gain};
+            }
+          }
+          if(move){
+            p.hand=p.hand.filter(c=>c.id!==move.card.id);
+            state.table=state.table.filter(t=>t.id!==move.table.id);
+            p.captured.push(move.card,move.table);
+            log(`${p.name} 用 ${cardText(move.card)} 钓走 ${cardText(move.table)}，获得红牌分 +${move.gain}。`);
+          }else if(p.hand.length>0){
+            const c=[...p.hand].sort((a,b)=>cardWeightForDrop(a)-cardWeightForDrop(b))[0];
+            p.hand=p.hand.filter(x=>x.id!==c.id);
+            state.table.push(c);
+            log(`${p.name} 不能钓，放下 ${cardText(c)}。`);
+          }
+          state.phase='draw';
+          render();
+          await sleep(500);
+        }
+
+        // 2）AI自动摸盖牌。
+        if(state.phase==='draw'){
+          if(state.deck.length===0){
+            state.phase='autoNext';
+            log('盖牌已摸完，直接轮下一家。');
+          }else{
+            drawForCurrentPlayer();
+            render();
+            await sleep(500);
+          }
+        }
+
+        // 3）AI处理摸到的盖牌：能钓就钓，不能钓就放到台面。这里必须进入autoNext，避免卡住。
+        if(state.phase==='drawn' && state.drawn){
+          const t=bestMatchFor(state.drawn);
+          if(t){
+            const c=state.drawn;
+            state.drawn=null;
+            state.table=state.table.filter(x=>x.id!==t.id);
+            p.captured.push(c,t);
+            log(`${p.name} 摸到 ${cardText(c)}，钓走 ${cardText(t)}，获得红牌分 +${redScore(c)+redScore(t)}。`);
+          }else{
+            const c=state.drawn;
+            state.drawn=null;
+            state.table.push(c);
+            log(`${p.name} 摸到 ${cardText(c)}，无法钓，放到台面。`);
+          }
+          state.phase='autoNext';
+          render();
+          await sleep(500);
+        }
+
+        if(isGameOver()) break;
+
+        // 4）无论AI刚才是钓了还是放了，都强制轮到下一家。
+        if(state.phase==='autoNext'){
+          state.turn=(state.turn+state.n-1)%state.n;
+          state.phase='hand';
+          state.selectedHand=null;
+          state.selectedTable=null;
+          state.drawn=null;
+          log(`轮到 ${state.players[state.turn].name}。`);
+          render();
+          await sleep(450);
+          continue;
+        }
+
+        // 保险兜底：任何未知状态都不要停在AI这里。
+        state.phase='autoNext';
+      }
+    }catch(err){
+      console.error(err);
+      log('AI自动流程出现异常，已尝试继续轮到下一家。');
+      state.phase='autoNext';
+    }finally{
+      state.aiBusy=false;
+      if(isGameOver()){
+        finishGame();
+      }else{
+        if(state.players && state.turn===0){
+          state.aiBusy=false;
+          if(!state.drawn && state.phase!=='draw' && state.phase!=='drawn') state.phase='hand';
+        }
+        render();
+        // 如果finally之后当前仍是AI，继续安排AI，防止停在“AI正在思考”。
+        scheduleAI(350);
+      }
+    }
+  }
+
+
+  function finishGame(){
+    render();
+    const scores=state.players.map((p,i)=>({i,name:p.name,score:p.captured.reduce((s,c)=>s+redScore(c),0),cards:p.captured.length})).sort((a,b)=>b.score-a.score);
+    const top=scores[0].score;
+    els.results.innerHTML=scores.map((r,idx)=>`<div class="result-row ${r.score===top?'win':''}"><span>${idx+1}. ${r.name}${r.score===top?' 🏆':''}</span><span>${r.score} 分 / ${r.cards} 张</span></div>`).join('');
+    $('resultModal').classList.remove('hidden'); log('本局结束，开始结算红牌分。');
+  }
+
+  $('startBtn').onclick=startGame;
+  $('newGameBtn').onclick=()=>{ $('setup').classList.remove('hidden'); $('game').classList.add('hidden'); $('actionbar').classList.add('hidden'); };
+  $('againBtn').onclick=startGame;
+  $('fishBtn').onclick=fish; $('dropBtn').onclick=drop; $('drawBtn').onclick=drawDeck;
+  $('ruleBtn').onclick=()=>$('ruleModal').classList.remove('hidden'); $('closeRule').onclick=()=>$('ruleModal').classList.add('hidden');
+
+  // 防卡死守护：如果画面停在AI回合且没有AI正在执行，就自动继续跑AI。
+  setInterval(()=>{
+    if(state && state.players && state.players[state.turn] && state.players[state.turn].isAI && !state.aiBusy && !isGameOver()){
+      scheduleAI(80);
+    }
+  }, 1200);
+})();
 </script>
 </body>
 </html>
