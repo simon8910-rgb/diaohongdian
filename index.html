@@ -1,151 +1,320 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>钓红点联机房间测试</title>
-  <style>
-    :root{--bg:#0f5132;--panel:#fff8ec;--green:#1f7a4f;--gold:#ffc85c;--text:#2b2520;--muted:#756f68;--danger:#b42318}
-    *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:linear-gradient(#073b25,#127244);color:var(--text);min-height:100vh;padding:16px}
-    .wrap{max-width:780px;margin:0 auto}.title{text-align:center;color:#fff;margin:10px 0 18px}.title h1{margin:0;font-size:28px}.title p{margin:8px 0 0;color:#e6fff2}
-    .card{background:var(--panel);border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 8px 22px #0002}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row>*{margin:4px 0}
-    button{border:0;border-radius:12px;padding:12px 16px;background:var(--gold);font-weight:800;font-size:16px;box-shadow:0 4px 10px #0002}button.secondary{background:#fff}button.danger{background:#ffd7d2;color:var(--danger)}button:disabled{opacity:.45}
-    input{border:1px solid #ddd;border-radius:12px;padding:12px;font-size:18px;width:150px;text-transform:uppercase}.big{font-size:22px;font-weight:900}.muted{color:var(--muted)}.pill{display:inline-block;background:#e9f6ee;color:#16643f;border-radius:999px;padding:6px 10px;margin:4px;font-weight:700}
-    .players{display:grid;grid-template-columns:1fr;gap:8px}.player{background:#fff;border-radius:14px;padding:12px;border:1px solid #eee;display:flex;justify-content:space-between}.me{border:2px solid var(--green)}
-    .log{background:#fff;border-radius:14px;padding:12px;height:180px;overflow:auto;line-height:1.7}.ok{color:#126b3b;font-weight:800}.warn{color:#9a5b00;font-weight:800}.small{font-size:13px}.copy{user-select:all;background:#fff;border:1px dashed #bbb;padding:10px;border-radius:10px;display:block;overflow-wrap:anywhere}
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>潮汕钓红点｜联机发牌测试</title>
+<style>
+  :root{--bg:#075132;--panel:#fff8e8;--green:#117a4a;--gold:#ffc85a;--red:#c83131;--text:#2b2520;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans SC",Arial,sans-serif;background:linear-gradient(#053d27,#0b6b42);color:var(--text);min-height:100vh}
+  header{color:#fff;text-align:center;padding:26px 16px 18px}
+  h1{margin:0;font-size:34px;letter-spacing:1px}
+  header p{margin:8px 0 0;color:#e9fff5;font-size:15px}
+  .wrap{width:min(980px,94vw);margin:0 auto 40px}
+  .card{background:var(--panel);border-radius:22px;padding:22px;margin:16px 0;box-shadow:0 10px 28px rgba(0,0,0,.18)}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  input,select{border:1px solid #ddd;border-radius:12px;padding:12px 14px;font-size:18px;background:#fff}
+  button{border:0;border-radius:14px;padding:12px 18px;font-weight:800;font-size:18px;box-shadow:0 7px 16px rgba(0,0,0,.12);background:#fff;cursor:pointer}
+  .primary{background:var(--gold)}
+  .danger{background:#ffd7d7;color:#a82424}
+  .muted{color:#7a7066;font-size:15px;line-height:1.6}
+  .pill{display:inline-block;border-radius:999px;padding:8px 14px;background:#e7f6ed;color:#08723e;font-weight:800;margin:4px}
+  .roomno{font-size:34px;color:#08723e;font-weight:900;letter-spacing:2px}
+  .player{display:flex;justify-content:space-between;align-items:center;border:1px solid #e7dfd0;background:#fff;border-radius:14px;padding:12px 14px;margin:8px 0;font-size:18px}
+  .me{border:3px solid #2e8b57}
+  .cards{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .poker{width:70px;height:96px;background:#fff;border-radius:12px;box-shadow:0 6px 14px rgba(0,0,0,.16);display:flex;flex-direction:column;justify-content:space-between;padding:8px;font-weight:900;font-size:22px}
+  .red{color:#c92b2b}.black{color:#222}
+  .table{border:1px dashed #d8cbb8;border-radius:16px;padding:12px;margin-top:12px;background:rgba(255,255,255,.42)}
+  .log{max-height:180px;overflow:auto;background:#fff;border-radius:14px;padding:12px;border:1px solid #eee}
+  .log div{border-bottom:1px dashed #eee;padding:6px 0;color:#555}
+  .hide{display:none}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="title"><h1>潮汕钓红点</h1><p>联机房间测试版：先验证创建/加入/同步</p></div>
+<header>
+  <h1>潮汕钓红点</h1>
+  <p>联机发牌测试版：先验证「房间同步 + 房主发牌 + 各看各牌」</p>
+</header>
 
-    <div id="home" class="card">
-      <div class="big">1）先测试房间同步</div>
-      <p class="muted">一台手机创建房间，另一台手机打开同一网页输入房间号加入。如果两边都能看到玩家人数变化，说明联机基础跑通。</p>
-      <div class="row">
-        <input id="nameInput" placeholder="你的名字" maxlength="12">
-        <button id="createBtn">创建房间</button>
+<div class="wrap">
+  <section id="entry" class="card">
+    <h2>进入联机房间</h2>
+    <p class="muted">这一步还不是完整出牌版，先确认多人进入同一个房间后，房主能统一发牌，所有人能同步看到台面和自己的手牌。</p>
+    <div class="row">
+      <input id="nameInput" placeholder="你的名字，例如：爸爸/妈妈/小宝" />
+      <button class="primary" id="createBtn">创建房间</button>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <input id="roomInput" placeholder="输入6位房间号" inputmode="numeric" />
+      <button id="joinBtn">加入房间</button>
+    </div>
+  </section>
+
+  <section id="roomPanel" class="card hide">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <div>房间：<span id="roomIdText" class="roomno"></span></div>
+        <div id="statusText" class="pill">等待中</div>
+        <div id="countText" class="pill">0 人在线</div>
       </div>
-      <hr style="border:0;border-top:1px solid #eadfce;margin:16px 0">
-      <div class="row">
-        <input id="roomInput" placeholder="房间号" maxlength="6">
-        <button id="joinBtn" class="secondary">加入房间</button>
-      </div>
-      <p class="small muted">提示：房间号是 6 位数字。这个版本还不是正式游戏，只是联机测试。</p>
+      <button class="danger" id="leaveBtn">离开</button>
+    </div>
+    <p class="muted">把下面链接发给朋友。朋友打开后会自动带入房间号，也可以手动输入房间号加入。</p>
+    <div class="table" id="shareLink"></div>
+  </section>
+
+  <section id="playersPanel" class="card hide">
+    <h2>房间玩家</h2>
+    <div id="playersList"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="primary" id="startBtn">房主发牌测试</button>
+      <button id="resetBtn">重新等待</button>
+    </div>
+    <p class="muted">规则：2人每人10张、台面12张；3人每人7张、台面10张；4人每人5张、台面12张。盖牌堆数量自动同步。</p>
+  </section>
+
+  <section id="gamePanel" class="card hide">
+    <h2>牌局同步</h2>
+    <div class="row">
+      <span class="pill" id="ruleText">未发牌</span>
+      <span class="pill" id="deckText">盖牌：0</span>
     </div>
 
-    <div id="room" class="card" style="display:none">
-      <div class="row" style="justify-content:space-between">
-        <div><span class="big">房间：</span><span id="roomCode" class="big ok"></span></div>
-        <button id="leaveBtn" class="danger">离开</button>
-      </div>
-      <p class="muted">把这个房间号或当前网页链接发给朋友。朋友打开后输入房间号加入。</p>
-      <span id="shareText" class="copy"></span>
-      <div style="margin-top:14px">
-        <span class="pill" id="statusPill">等待中</span>
-        <span class="pill" id="countPill">0 人</span>
-      </div>
-    </div>
+    <h3>台面牌</h3>
+    <div id="tableCards" class="cards"></div>
 
-    <div id="playersCard" class="card" style="display:none">
-      <div class="big">房间玩家</div>
-      <div id="players" class="players" style="margin-top:12px"></div>
-      <div class="row" style="margin-top:12px">
-        <button id="startBtn">房主测试开始</button>
-        <button id="pingBtn" class="secondary">发送测试消息</button>
-      </div>
-      <p class="small muted">只有房主点“测试开始”有效。后面正式游戏会把这里改成发牌和轮流出牌。</p>
-    </div>
+    <h3>你的手牌</h3>
+    <div id="myHand" class="cards"></div>
 
-    <div id="logCard" class="card" style="display:none">
-      <div class="big">同步记录</div>
-      <div id="logs" class="log"></div>
-    </div>
-  </div>
+    <h3>其他玩家手牌数量</h3>
+    <div id="otherHands"></div>
+  </section>
 
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
-    import { getDatabase, ref, set, update, onValue, get, push, onDisconnect, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js';
+  <section class="card">
+    <h2>同步日志</h2>
+    <div id="logs" class="log"></div>
+  </section>
+</div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCgr8wLKe_BfWRs2mnSeEJVd7LggNa7uEY",
-      authDomain: "diaohongdian.firebaseapp.com",
-      databaseURL: "https://diaohongdian-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "diaohongdian",
-      storageBucket: "diaohongdian.firebasestorage.app",
-      messagingSenderId: "494073636915",
-      appId: "1:494073636915:web:eec07630e901382d329b46",
-      measurementId: "G-VXVECSZLHB"
-    };
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getDatabase, ref, set, update, onValue, get, remove, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+const firebaseConfig = {
+  apiKey: "AIzaSyCgr8wLKe_BfWRs2mnSeEJVd7LggNa7uEY",
+  authDomain: "diaohongdian.firebaseapp.com",
+  databaseURL: "https://diaohongdian-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "diaohongdian",
+  storageBucket: "diaohongdian.firebasestorage.app",
+  messagingSenderId: "494073636915",
+  appId: "1:494073636915:web:eec07630e901382d329b46",
+  measurementId: "G-VXVECSZLHB"
+};
 
-    const $ = (id)=>document.getElementById(id);
-    const clientId = localStorage.getItem('dhd_client_id') || ('u_' + Math.random().toString(36).slice(2,10));
-    localStorage.setItem('dhd_client_id', clientId);
-    let currentRoom = null;
-    let unsubscribe = null;
-    let roomData = null;
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-    function code(){ return String(Math.floor(100000 + Math.random()*900000)); }
-    function name(){ return $('nameInput').value.trim() || '玩家' + clientId.slice(-4); }
-    function showRoomUI(roomCode){
-      $('home').style.display='none'; $('room').style.display='block'; $('playersCard').style.display='block'; $('logCard').style.display='block';
-      $('roomCode').textContent=roomCode;
-      $('shareText').textContent = location.origin + location.pathname + '?room=' + roomCode;
+let roomId = "";
+let playerId = localStorage.getItem("dhd_player_id");
+if(!playerId){
+  playerId = "p_" + Math.random().toString(36).slice(2,8) + Date.now().toString(36).slice(-4);
+  localStorage.setItem("dhd_player_id", playerId);
+}
+let isHost = false;
+let currentRoom = null;
+
+const $ = (id)=>document.getElementById(id);
+const entry = $("entry"), roomPanel=$("roomPanel"), playersPanel=$("playersPanel"), gamePanel=$("gamePanel");
+
+function randomRoom(){ return String(Math.floor(100000 + Math.random()*900000)); }
+function playerName(){
+  return ($("nameInput").value || localStorage.getItem("dhd_name") || ("玩家" + playerId.slice(2,6))).trim().slice(0,10);
+}
+function logLine(text){
+  const box=$("logs");
+  const div=document.createElement("div");
+  div.textContent=text;
+  box.prepend(div);
+}
+function suitColor(s){ return (s==="♥" || s==="♦") ? "red":"black"; }
+function cardHTML(card){
+  const div=document.createElement("div");
+  div.className = "poker " + suitColor(card.suit);
+  div.innerHTML = `<div>${card.rank}</div><div style="font-size:28px;text-align:right">${card.suit}</div>`;
+  return div;
+}
+function buildDeck(){
+  const suits=["♠","♥","♣","♦"];
+  const ranks=["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+  const deck=[];
+  suits.forEach(s=>ranks.forEach(r=>deck.push({rank:r,suit:s,id:r+s})));
+  for(let i=deck.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [deck[i],deck[j]]=[deck[j],deck[i]];
+  }
+  return deck;
+}
+function deal(players){
+  const total = players.length;
+  let handCount, tableCount;
+  if(total===2){ handCount=10; tableCount=12; }
+  else if(total===3){ handCount=7; tableCount=10; }
+  else { handCount=5; tableCount=12; }
+
+  const deck=buildDeck();
+  const hands={};
+  players.forEach(p=>{
+    hands[p.id]=deck.splice(0, handCount);
+  });
+  const tableCards=deck.splice(0, tableCount);
+  return {hands, tableCards, deck, handCount, tableCount};
+}
+
+async function createRoom(){
+  const name=playerName(); localStorage.setItem("dhd_name", name);
+  roomId=randomRoom(); isHost=true;
+  const roomRef=ref(db, "rooms/"+roomId);
+  const roomData={
+    roomId,
+    status:"waiting",
+    hostId:playerId,
+    createdAt:Date.now(),
+    players:{
+      [playerId]:{id:playerId,name,host:true,online:true,joinedAt:Date.now(),lastSeen:serverTimestamp()}
+    },
+    logs:[`${name} 创建房间。`]
+  };
+  await set(roomRef, roomData);
+  await onDisconnect(ref(db, `rooms/${roomId}/players/${playerId}/online`)).set(false);
+  enterRoom(roomId);
+}
+async function joinRoom(idFromInput){
+  const name=playerName(); localStorage.setItem("dhd_name", name);
+  roomId=(idFromInput || $("roomInput").value || "").trim();
+  if(!/^\d{6}$/.test(roomId)){ alert("请输入6位房间号"); return; }
+  const snap=await get(ref(db, "rooms/"+roomId));
+  if(!snap.exists()){ alert("房间不存在"); return; }
+  const room=snap.val();
+  const players=room.players || {};
+  if(!players[playerId] && Object.keys(players).length>=4){ alert("这个房间已经满4人"); return; }
+  await update(ref(db, `rooms/${roomId}/players/${playerId}`), {id:playerId,name,host:false,online:true,joinedAt:Date.now(),lastSeen:serverTimestamp()});
+  await addLog(`${name} 加入房间。`);
+  await onDisconnect(ref(db, `rooms/${roomId}/players/${playerId}/online`)).set(false);
+  enterRoom(roomId);
+}
+function enterRoom(id){
+  roomId=id;
+  entry.classList.add("hide");
+  roomPanel.classList.remove("hide");
+  playersPanel.classList.remove("hide");
+  $("roomIdText").textContent=roomId;
+  const base = location.origin + location.pathname;
+  const url = `${base}?room=${roomId}`;
+  $("shareLink").textContent=url;
+
+  onValue(ref(db, "rooms/"+roomId), (snap)=>{
+    if(!snap.exists()){
+      alert("房间已不存在或被清空");
+      location.href=location.origin+location.pathname;
+      return;
     }
-    function showHome(){
-      $('home').style.display='block'; $('room').style.display='none'; $('playersCard').style.display='none'; $('logCard').style.display='none';
-      $('players').innerHTML=''; $('logs').innerHTML=''; currentRoom=null; roomData=null;
-    }
-    function addLocalLog(s){ const d=document.createElement('div'); d.textContent=s; $('logs').prepend(d); }
-    async function addLog(s){ if(!currentRoom) return; await push(ref(db, `rooms/${currentRoom}/logs`), {text:s, t:Date.now()}); }
-    async function joinRoom(roomCode, asHost=false){
-      currentRoom = roomCode;
-      const pRef = ref(db, `rooms/${roomCode}/players/${clientId}`);
-      await update(pRef, { id:clientId, name:name(), joinedAt: Date.now(), online:true, host:asHost });
-      onDisconnect(pRef).update({ online:false, leftAt: serverTimestamp() });
-      showRoomUI(roomCode);
-      if(unsubscribe) unsubscribe();
-      onValue(ref(db, `rooms/${roomCode}`), snap=>{ roomData=snap.val(); render(); });
-      await addLog(`${name()} 加入房间。`);
-    }
-    async function createRoom(){
-      const roomCode = code();
-      await set(ref(db, `rooms/${roomCode}`), { status:'waiting', hostId:clientId, createdAt:Date.now(), players:{}, logs:{} });
-      await joinRoom(roomCode, true);
-    }
-    async function joinExisting(){
-      const roomCode = $('roomInput').value.trim();
-      if(!/^\d{6}$/.test(roomCode)){ alert('请输入6位房间号'); return; }
-      const snap = await get(ref(db, `rooms/${roomCode}`));
-      if(!snap.exists()){ alert('房间不存在，请确认房间号'); return; }
-      await joinRoom(roomCode, false);
-    }
-    function render(){
-      if(!roomData) return;
-      const players = Object.values(roomData.players || {});
-      $('statusPill').textContent = roomData.status === 'started' ? '已测试开始' : '等待中';
-      $('countPill').textContent = players.filter(p=>p.online).length + ' 人在线';
-      $('players').innerHTML = players.map(p=>`<div class="player ${p.id===clientId?'me':''}"><span>${escapeHtml(p.name)} ${p.host?'（房主）':''} ${p.id===clientId?'（你）':''}</span><span>${p.online?'在线':'离线'}</span></div>`).join('');
-      const logs = Object.values(roomData.logs || {}).sort((a,b)=>(b.t||0)-(a.t||0)).slice(0,30);
-      $('logs').innerHTML = logs.map(l=>`<div>${escapeHtml(l.text)}</div>`).join('');
-    }
-    function escapeHtml(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+    currentRoom=snap.val();
+    renderRoom(currentRoom);
+  });
+}
+function renderRoom(room){
+  isHost = room.hostId === playerId;
+  const playersObj = room.players || {};
+  const players = Object.values(playersObj).sort((a,b)=>(a.joinedAt||0)-(b.joinedAt||0));
+  $("statusText").textContent = room.status==="playing" ? "已发牌" : "等待中";
+  $("countText").textContent = `${players.filter(p=>p.online!==false).length} 人在线`;
 
-    $('createBtn').onclick=createRoom;
-    $('joinBtn').onclick=joinExisting;
-    $('leaveBtn').onclick=async()=>{ if(currentRoom){ await update(ref(db, `rooms/${currentRoom}/players/${clientId}`), {online:false,leftAt:Date.now()}); } showHome(); };
-    $('pingBtn').onclick=()=>addLog(`${name()} 发送了一条测试消息。`);
-    $('startBtn').onclick=async()=>{
-      if(!roomData || roomData.hostId!==clientId){ alert('只有房主可以点测试开始'); return; }
-      await update(ref(db, `rooms/${currentRoom}`), {status:'started', startedAt:Date.now()});
-      await addLog('房主点击了测试开始。');
-    };
+  $("startBtn").style.display = isHost ? "inline-block" : "none";
+  $("resetBtn").style.display = isHost ? "inline-block" : "none";
 
-    const urlRoom = new URLSearchParams(location.search).get('room');
-    if(urlRoom){ $('roomInput').value=urlRoom; }
-  </script>
+  const list=$("playersList"); list.innerHTML="";
+  players.forEach((p,idx)=>{
+    const div=document.createElement("div");
+    div.className="player" + (p.id===playerId ? " me":"");
+    div.innerHTML=`<span>${idx+1}. ${escapeHTML(p.name || p.id)} ${p.host?"（房主）":""} ${p.id===playerId?"（你）":""}</span><span>${p.online===false?"离线":"在线"}</span>`;
+    list.appendChild(div);
+  });
+
+  if(room.game){
+    gamePanel.classList.remove("hide");
+    const g=room.game;
+    $("ruleText").textContent = `${players.length}人规则：每人${g.handCount}张，台面${g.tableCount}张`;
+    $("deckText").textContent = `盖牌：${(g.deck||[]).length}`;
+    const table=$("tableCards"); table.innerHTML="";
+    (g.tableCards||[]).forEach(c=>table.appendChild(cardHTML(c)));
+    const my=$("myHand"); my.innerHTML="";
+    ((g.hands||{})[playerId]||[]).forEach(c=>my.appendChild(cardHTML(c)));
+    const other=$("otherHands"); other.innerHTML="";
+    players.filter(p=>p.id!==playerId).forEach(p=>{
+      const hand=((g.hands||{})[p.id]||[]);
+      const div=document.createElement("div");
+      div.className="player";
+      div.innerHTML=`<span>${escapeHTML(p.name||p.id)}</span><span>${hand.length} 张牌</span>`;
+      other.appendChild(div);
+    });
+  } else {
+    gamePanel.classList.add("hide");
+  }
+
+  const logs = room.logs || [];
+  $("logs").innerHTML = "";
+  [...logs].reverse().slice(0,30).forEach(t=>{
+    const div=document.createElement("div"); div.textContent=t; $("logs").appendChild(div);
+  });
+}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+async function addLog(text){
+  const snap=await get(ref(db, `rooms/${roomId}/logs`));
+  const logs=snap.val() || [];
+  logs.push(text);
+  if(logs.length>80) logs.splice(0, logs.length-80);
+  await set(ref(db, `rooms/${roomId}/logs`), logs);
+}
+async function startDeal(){
+  if(!currentRoom || currentRoom.hostId!==playerId){ alert("只有房主可以发牌"); return; }
+  const players=Object.values(currentRoom.players || {}).sort((a,b)=>(a.joinedAt||0)-(b.joinedAt||0)).filter(p=>p.online!==false);
+  if(players.length<2){ alert("至少2个人才能测试发牌"); return; }
+  if(players.length>4){ alert("最多4人"); return; }
+  const game=deal(players);
+  await update(ref(db, `rooms/${roomId}`), {
+    status:"playing",
+    playerOrder:players.map(p=>p.id),
+    currentTurn:0,
+    game
+  });
+  await addLog(`房主发牌：${players.length}人，每人${game.handCount}张，台面${game.tableCount}张，盖牌${game.deck.length}张。`);
+}
+async function resetRoom(){
+  if(!isHost) return;
+  await update(ref(db, `rooms/${roomId}`), {status:"waiting", game:null, currentTurn:null, playerOrder:null});
+  await addLog("房主重置为等待状态。");
+}
+async function leaveRoom(){
+  if(roomId){
+    await update(ref(db, `rooms/${roomId}/players/${playerId}`), {online:false});
+  }
+  location.href=location.origin+location.pathname;
+}
+
+$("createBtn").onclick=createRoom;
+$("joinBtn").onclick=()=>joinRoom();
+$("startBtn").onclick=startDeal;
+$("resetBtn").onclick=resetRoom;
+$("leaveBtn").onclick=leaveRoom;
+
+const params=new URLSearchParams(location.search);
+const roomFromUrl=params.get("room");
+if(roomFromUrl){
+  $("roomInput").value=roomFromUrl;
+  $("nameInput").value=localStorage.getItem("dhd_name") || "";
+}
+</script>
 </body>
 </html>
