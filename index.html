@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>潮汕钓红点｜联机发牌测试</title>
+<title>潮汕钓红点｜联机发牌测试修复版</title>
 <style>
   :root{--bg:#075132;--panel:#fff8e8;--green:#117a4a;--gold:#ffc85a;--red:#c83131;--text:#2b2520;}
   *{box-sizing:border-box}
@@ -20,28 +20,31 @@
   .danger{background:#ffd7d7;color:#a82424}
   .muted{color:#7a7066;font-size:15px;line-height:1.6}
   .pill{display:inline-block;border-radius:999px;padding:8px 14px;background:#e7f6ed;color:#08723e;font-weight:800;margin:4px}
+  .warn{background:#fff0d8;color:#9a5a00}
+  .bad{background:#ffe0e0;color:#a82424}
   .roomno{font-size:34px;color:#08723e;font-weight:900;letter-spacing:2px}
   .player{display:flex;justify-content:space-between;align-items:center;border:1px solid #e7dfd0;background:#fff;border-radius:14px;padding:12px 14px;margin:8px 0;font-size:18px}
   .me{border:3px solid #2e8b57}
   .cards{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
   .poker{width:70px;height:96px;background:#fff;border-radius:12px;box-shadow:0 6px 14px rgba(0,0,0,.16);display:flex;flex-direction:column;justify-content:space-between;padding:8px;font-weight:900;font-size:22px}
   .red{color:#c92b2b}.black{color:#222}
-  .table{border:1px dashed #d8cbb8;border-radius:16px;padding:12px;margin-top:12px;background:rgba(255,255,255,.42)}
+  .table{border:1px dashed #d8cbb8;border-radius:16px;padding:12px;margin-top:12px;background:rgba(255,255,255,.42);word-break:break-all}
   .log{max-height:180px;overflow:auto;background:#fff;border-radius:14px;padding:12px;border:1px solid #eee}
   .log div{border-bottom:1px dashed #eee;padding:6px 0;color:#555}
   .hide{display:none}
+  .small{font-size:13px;color:#766}
 </style>
 </head>
 <body>
 <header>
   <h1>潮汕钓红点</h1>
-  <p>联机发牌测试版：先验证「房间同步 + 房主发牌 + 各看各牌」</p>
+  <p>联机发牌测试修复版：每个玩家都能看到自己的手牌</p>
 </header>
 
 <div class="wrap">
   <section id="entry" class="card">
     <h2>进入联机房间</h2>
-    <p class="muted">这一步还不是完整出牌版，先确认多人进入同一个房间后，房主能统一发牌，所有人能同步看到台面和自己的手牌。</p>
+    <p class="muted">版本：dealtest2。先验证多人进入同一个房间后，房主发牌，所有人能同步看到台面和自己的手牌。</p>
     <div class="row">
       <input id="nameInput" placeholder="你的名字，例如：爸爸/妈妈/小宝" />
       <button class="primary" id="createBtn">创建房间</button>
@@ -58,10 +61,11 @@
         <div>房间：<span id="roomIdText" class="roomno"></span></div>
         <div id="statusText" class="pill">等待中</div>
         <div id="countText" class="pill">0 人在线</div>
+        <div id="identityText" class="pill warn"></div>
       </div>
       <button class="danger" id="leaveBtn">离开</button>
     </div>
-    <p class="muted">把下面链接发给朋友。朋友打开后会自动带入房间号，也可以手动输入房间号加入。</p>
+    <p class="muted">把下面链接发给朋友。朋友打开后输入名字并加入房间。</p>
     <div class="table" id="shareLink"></div>
   </section>
 
@@ -72,7 +76,7 @@
       <button class="primary" id="startBtn">房主发牌测试</button>
       <button id="resetBtn">重新等待</button>
     </div>
-    <p class="muted">规则：2人每人10张、台面12张；3人每人7张、台面10张；4人每人5张、台面12张。盖牌堆数量自动同步。</p>
+    <p class="muted">只有房主点“发牌测试”。其他玩家不用点，发牌后会自动同步。</p>
   </section>
 
   <section id="gamePanel" class="card hide">
@@ -80,7 +84,10 @@
     <div class="row">
       <span class="pill" id="ruleText">未发牌</span>
       <span class="pill" id="deckText">盖牌：0</span>
+      <span class="pill warn" id="handOwnerText"></span>
     </div>
+
+    <div id="noHandWarning" class="table hide" style="border-color:#e6a23c;background:#fff3d7;color:#7a4a00;font-weight:700"></div>
 
     <h3>台面牌</h3>
     <div id="tableCards" class="cards"></div>
@@ -100,7 +107,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getDatabase, ref, set, update, onValue, get, remove, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+import { getDatabase, ref, set, update, onValue, get, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCgr8wLKe_BfWRs2mnSeEJVd7LggNa7uEY",
@@ -117,13 +124,14 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 let roomId = "";
-let playerId = localStorage.getItem("dhd_player_id");
+let playerId = localStorage.getItem("dhd_player_id_v2");
 if(!playerId){
   playerId = "p_" + Math.random().toString(36).slice(2,8) + Date.now().toString(36).slice(-4);
-  localStorage.setItem("dhd_player_id", playerId);
+  localStorage.setItem("dhd_player_id_v2", playerId);
 }
 let isHost = false;
 let currentRoom = null;
+let unsubRoom = null;
 
 const $ = (id)=>document.getElementById(id);
 const entry = $("entry"), roomPanel=$("roomPanel"), playersPanel=$("playersPanel"), gamePanel=$("gamePanel");
@@ -131,12 +139,6 @@ const entry = $("entry"), roomPanel=$("roomPanel"), playersPanel=$("playersPanel
 function randomRoom(){ return String(Math.floor(100000 + Math.random()*900000)); }
 function playerName(){
   return ($("nameInput").value || localStorage.getItem("dhd_name") || ("玩家" + playerId.slice(2,6))).trim().slice(0,10);
-}
-function logLine(text){
-  const box=$("logs");
-  const div=document.createElement("div");
-  div.textContent=text;
-  box.prepend(div);
 }
 function suitColor(s){ return (s==="♥" || s==="♦") ? "red":"black"; }
 function cardHTML(card){
@@ -165,17 +167,21 @@ function deal(players){
 
   const deck=buildDeck();
   const hands={};
-  players.forEach(p=>{
-    hands[p.id]=deck.splice(0, handCount);
-  });
+  players.forEach(p=>{ hands[p.id]=deck.splice(0, handCount); });
   const tableCards=deck.splice(0, tableCount);
-  return {hands, tableCards, deck, handCount, tableCount};
+  return {
+    hands,
+    tableCards,
+    deck,
+    handCount,
+    tableCount,
+    dealtTo: players.map(p=>({id:p.id,name:p.name || p.id}))
+  };
 }
 
 async function createRoom(){
   const name=playerName(); localStorage.setItem("dhd_name", name);
   roomId=randomRoom(); isHost=true;
-  const roomRef=ref(db, "rooms/"+roomId);
   const roomData={
     roomId,
     status:"waiting",
@@ -186,7 +192,7 @@ async function createRoom(){
     },
     logs:[`${name} 创建房间。`]
   };
-  await set(roomRef, roomData);
+  await set(ref(db, "rooms/"+roomId), roomData);
   await onDisconnect(ref(db, `rooms/${roomId}/players/${playerId}/online`)).set(false);
   enterRoom(roomId);
 }
@@ -211,10 +217,11 @@ function enterRoom(id){
   playersPanel.classList.remove("hide");
   $("roomIdText").textContent=roomId;
   const base = location.origin + location.pathname;
-  const url = `${base}?room=${roomId}`;
-  $("shareLink").textContent=url;
+  $("shareLink").textContent = `${base}?room=${roomId}&v=dealtest2`;
+  $("identityText").textContent = `你的身份ID：${playerId.slice(0,10)}`;
 
-  onValue(ref(db, "rooms/"+roomId), (snap)=>{
+  if(unsubRoom) unsubRoom();
+  unsubRoom = onValue(ref(db, "rooms/"+roomId), (snap)=>{
     if(!snap.exists()){
       alert("房间已不存在或被清空");
       location.href=location.origin+location.pathname;
@@ -228,9 +235,10 @@ function renderRoom(room){
   isHost = room.hostId === playerId;
   const playersObj = room.players || {};
   const players = Object.values(playersObj).sort((a,b)=>(a.joinedAt||0)-(b.joinedAt||0));
-  $("statusText").textContent = room.status==="playing" ? "已发牌" : "等待中";
-  $("countText").textContent = `${players.filter(p=>p.online!==false).length} 人在线`;
+  const onlinePlayers = players.filter(p=>p.online!==false);
 
+  $("statusText").textContent = room.status==="playing" ? "已发牌" : "等待中";
+  $("countText").textContent = `${onlinePlayers.length} 人在线`;
   $("startBtn").style.display = isHost ? "inline-block" : "none";
   $("resetBtn").style.display = isHost ? "inline-block" : "none";
 
@@ -238,21 +246,37 @@ function renderRoom(room){
   players.forEach((p,idx)=>{
     const div=document.createElement("div");
     div.className="player" + (p.id===playerId ? " me":"");
-    div.innerHTML=`<span>${idx+1}. ${escapeHTML(p.name || p.id)} ${p.host?"（房主）":""} ${p.id===playerId?"（你）":""}</span><span>${p.online===false?"离线":"在线"}</span>`;
+    div.innerHTML=`<span>${idx+1}. ${escapeHTML(p.name || p.id)} ${p.id===room.hostId?"（房主）":""} ${p.id===playerId?"（你）":""}<br><span class="small">${p.id.slice(0,14)}</span></span><span>${p.online===false?"离线":"在线"}</span>`;
     list.appendChild(div);
   });
 
   if(room.game){
     gamePanel.classList.remove("hide");
     const g=room.game;
-    $("ruleText").textContent = `${players.length}人规则：每人${g.handCount}张，台面${g.tableCount}张`;
+    $("ruleText").textContent = `${(g.dealtTo||[]).length}人规则：每人${g.handCount}张，台面${g.tableCount}张`;
     $("deckText").textContent = `盖牌：${(g.deck||[]).length}`;
+
+    const myPlayer = players.find(p=>p.id===playerId);
+    $("handOwnerText").textContent = `当前身份：${myPlayer ? myPlayer.name : "未在房间玩家中"}`;
+
     const table=$("tableCards"); table.innerHTML="";
     (g.tableCards||[]).forEach(c=>table.appendChild(cardHTML(c)));
+
     const my=$("myHand"); my.innerHTML="";
-    ((g.hands||{})[playerId]||[]).forEach(c=>my.appendChild(cardHTML(c)));
+    const myHand = g.hands && g.hands[playerId] ? g.hands[playerId] : null;
+
+    const warn=$("noHandWarning");
+    if(!myHand){
+      warn.classList.remove("hide");
+      const dealtNames=(g.dealtTo||[]).map(p=>p.name).join("、");
+      warn.innerHTML = `当前页面没有找到属于你的手牌。<br>通常原因：房主发牌时你还没加入成功，或者手机打开的是旧缓存页面。<br>发牌名单：${escapeHTML(dealtNames)}<br>处理方法：让房主点“重新等待”，你确认在玩家列表里后，再由房主重新点“发牌测试”。`;
+    } else {
+      warn.classList.add("hide");
+      myHand.forEach(c=>my.appendChild(cardHTML(c)));
+    }
+
     const other=$("otherHands"); other.innerHTML="";
-    players.filter(p=>p.id!==playerId).forEach(p=>{
+    (g.dealtTo || players).filter(p=>p.id!==playerId).forEach(p=>{
       const hand=((g.hands||{})[p.id]||[]);
       const div=document.createElement("div");
       div.className="player";
@@ -271,6 +295,7 @@ function renderRoom(room){
 }
 function escapeHTML(s){return String(s).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
 async function addLog(text){
+  if(!roomId) return;
   const snap=await get(ref(db, `rooms/${roomId}/logs`));
   const logs=snap.val() || [];
   logs.push(text);
@@ -278,10 +303,13 @@ async function addLog(text){
   await set(ref(db, `rooms/${roomId}/logs`), logs);
 }
 async function startDeal(){
-  if(!currentRoom || currentRoom.hostId!==playerId){ alert("只有房主可以发牌"); return; }
-  const players=Object.values(currentRoom.players || {}).sort((a,b)=>(a.joinedAt||0)-(b.joinedAt||0)).filter(p=>p.online!==false);
+  if(!currentRoom || currentRoom.hostId!==playerId){ alert("只有房主可以点测试开始"); return; }
+  const players=Object.values(currentRoom.players || {})
+    .sort((a,b)=>(a.joinedAt||0)-(b.joinedAt||0))
+    .filter(p=>p.online!==false);
   if(players.length<2){ alert("至少2个人才能测试发牌"); return; }
   if(players.length>4){ alert("最多4人"); return; }
+
   const game=deal(players);
   await update(ref(db, `rooms/${roomId}`), {
     status:"playing",
@@ -289,7 +317,7 @@ async function startDeal(){
     currentTurn:0,
     game
   });
-  await addLog(`房主发牌：${players.length}人，每人${game.handCount}张，台面${game.tableCount}张，盖牌${game.deck.length}张。`);
+  await addLog(`房主发牌：${players.map(p=>p.name).join("、")}；每人${game.handCount}张，台面${game.tableCount}张，盖牌${game.deck.length}张。`);
 }
 async function resetRoom(){
   if(!isHost) return;
